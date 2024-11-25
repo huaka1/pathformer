@@ -15,7 +15,7 @@ data_name=ETTh1
 
 for pred_len in 96
 do
-    python -u run.py \
+    python -u -m debugpy --listen 58793 --wait-for-client run.py \
       --is_training 1 \
       --root_path $root_path_name \
       --data_path $data_path_name \

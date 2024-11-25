@@ -66,7 +66,7 @@ class Transformer_Layer(nn.Module):
 
     def forward(self, x):
 
-        new_x  = x
+        new_x  = x # (104, 96, 7, 4)
         batch_size = x.size(0)
         intra_out_concat = None
 

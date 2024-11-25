@@ -1,0 +1,4 @@
+Args in experiment:
+Namespace(batch_norm=0, batch_size=128, checkpoints='./checkpoints/', d_ff=64, d_model=4, data='ETTh1', data_path='ETTh1.csv', devices='2', do_predict=False, drop=0.1, embed='timeF', features='M', freq='h', gpu=0, individual=False, is_training=1, itr=1, k=3, layer_nums=3, learning_rate=0.0005, lradj='TST', metric='mae', model='PathFormer', model_id='96_192', num_experts_list=[4, 4, 4], num_nodes=7, num_workers=10, patch_size_list=[[16, 12, 8, 32], [12, 8, 6, 4], [8, 6, 4, 2]], patience=10, pct_start=0.4, pred_len=192, residual_connection=1, revin=1, root_path='./dataset/ETT/', seq_len=96, target='OT', test_flop=False, train_epochs=30, use_amp=False, use_gpu=True, use_multi_gpu=False)
+Use GPU: cuda:0
+>>>>>>>start training : 96_192_PathFormer_ftETTh1_slM_pl96_192>>>>>>>>>>>>>>>>>>>>>>>>>>

@@ -42,14 +42,14 @@ class Model(nn.Module):
             nn.Linear(self.seq_len * self.d_model, self.pre_len)
         )
 
-    def forward(self, x):
-
+    def forward(self, x): 
+        # x: (128, 96, 7)
         balance_loss = 0
         # norm
         if self.revin:
             x = self.revin_layer(x, 'norm')
-        out = self.start_fc(x.unsqueeze(-1))
-
+        # self.start_fc = nn.Linear(in_features=1, out_features=self.d_model) d_model = 4
+        out = self.start_fc(x.unsqueeze(-1)) # (128, 96, 7, 4)
 
         batch_size = x.shape[0]
 

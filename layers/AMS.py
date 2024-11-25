@@ -67,13 +67,13 @@ class AMS(nn.Module):
         return prob
 
     def seasonality_and_trend_decompose(self, x):
-        x = x[:, :, :, 0]
+        x = x[:, :, :, 0] # (128, 96, 7)
         _, trend = self.trend_model(x)
         seasonality, _ = self.seasonality_model(x)
         return x + seasonality + trend
 
-    def noisy_top_k_gating(self, x, train, noise_epsilon=1e-2):
-        x = self.start_linear(x).squeeze(-1)
+    def noisy_top_k_gating(self, x, train, noise_epsilon=1e-2): # [B, L, N]
+        x = self.start_linear(x).squeeze(-1) # [B, L, N] -> [B, L]
 
         # clean_logits = x @ self.w_gate
         clean_logits = self.w_gate(x)
@@ -101,19 +101,28 @@ class AMS(nn.Module):
             load = self._gates_to_load(gates)
         return gates, load
 
-    def forward(self, x, loss_coef=1e-2):
-        new_x = self.seasonality_and_trend_decompose(x)
+    def forward(self, x, loss_coef=1e-2): # (128, 96, 7, 4)
+        new_x = self.seasonality_and_trend_decompose(x) # (128, 96, 7)
 
-        #multi-scale router
+        #multi-scale router 
+        # gates是一个概率分布矩阵，决定每个输入样本应该被发送到哪些专家模型 load表示每个专家的负载（被分配到的样本数量），所以是个experts_nums维度的数组
         gates, load = self.noisy_top_k_gating(new_x, self.training)
-        # calculate balance loss
+        # importance是每个专家的权重，所以是个experts_nums维度的数组
         importance = gates.sum(0)
+        # calculate balance loss  
         balance_loss = self.cv_squared(importance) + self.cv_squared(load)
         balance_loss *= loss_coef
         dispatcher = SparseDispatcher(self.num_experts, gates)
-        expert_inputs = dispatcher.dispatch(x)
-        expert_outputs = [self.experts[i](expert_inputs[i])[0] for i in range(self.num_experts)]
-        output = dispatcher.combine(expert_outputs)
+        expert_inputs = dispatcher.dispatch(x) # (104, 96, 7, 4) (65, 96, 7, 4) (123, 96, 7, 4) (92, 96, 7, 4) 
+        # expert_outputs = [self.experts[i](expert_inputs[i])[0] for i in range(self.num_experts)]
+        expert_outputs = []
+        for i in range(self.num_experts):
+            # output[0]是输出，output[1]是attention，等于output, _ 的写法
+            output = self.experts[i](expert_inputs[i])
+            output = output[0] # (65, 96, 7, 4)
+            expert_outputs.append(output)
+
+        output = dispatcher.combine(expert_outputs)  
         if self.residual_connection:
             output = output + x
         return output, balance_loss
